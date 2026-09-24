@@ -23,8 +23,19 @@
           <el-table-column label="状态">
             <template #default="{ row }"><el-tag>{{ EmployeeStatusLabel[row.status as keyof typeof EmployeeStatusLabel] }}</el-tag></template>
           </el-table-column>
-          <el-table-column label="操作">
-            <template #default="{ row }"><el-button text @click="selected = row; detailVisible = true">详情</el-button></template>
+          <el-table-column label="操作" width="140">
+            <template #default="{ row }">
+              <el-button text @click="selected = row; detailVisible = true">详情</el-button>
+              <el-button
+                v-if="row.status !== EmployeeStatus.RESIGNED"
+                v-permission="['OWNER','MANAGER']"
+                text
+                type="danger"
+                @click="selected = row; resignVisible = true"
+              >
+                离职
+              </el-button>
+            </template>
           </el-table-column>
         </el-table>
       </div>
@@ -35,18 +46,26 @@
     </div>
     <el-drawer v-model="detailVisible" title="员工详情"><EmployeeDetail :employee="selected" /></el-drawer>
     <el-drawer v-model="formVisible" title="入职登记"><EmployeeForm @submit="save" /></el-drawer>
+    <EmployeeResignDialog
+      v-model="resignVisible"
+      :employee="selected"
+      @completed="load"
+      @require-transfer="handleRequireTransfer"
+    />
   </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
 import { Plus } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 import AppLayout from '@/components/layout/AppLayout.vue';
 import EmployeeAvatar from '@/components/common/EmployeeAvatar.vue';
 import StoreSelector from '@/components/common/StoreSelector.vue';
 import EmployeeDetail from './EmployeeDetail.vue';
 import EmployeeForm from './EmployeeForm.vue';
-import { EmployeeStatusLabel } from '@/constants/enums';
+import EmployeeResignDialog from './EmployeeResignDialog.vue';
+import { EmployeeStatus, EmployeeStatusLabel } from '@/constants/enums';
 import { useEmployeeStore } from '@/stores/employeeStore';
 import { createEmployee } from '@/api/employee';
 import type { Employee } from '@/types/employee';
@@ -55,6 +74,7 @@ const employees = useEmployeeStore();
 const filters = reactive<Record<string, unknown>>({});
 const detailVisible = ref(false);
 const formVisible = ref(false);
+const resignVisible = ref(false);
 const selected = ref<Employee | null>(null);
 const departmentTree = computed(() => {
   const groups = employees.list.reduce<Record<string, Employee[]>>((acc, item) => {
@@ -76,6 +96,11 @@ async function save(payload: Record<string, unknown>) {
   await createEmployee(payload);
   formVisible.value = false;
   await load();
+}
+
+function handleRequireTransfer() {
+  resignVisible.value = false;
+  ElMessage.info('请先通过门店人员配置为该员工调岗或换店，再办理离职');
 }
 
 onMounted(load);

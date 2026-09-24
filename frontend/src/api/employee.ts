@@ -15,3 +15,13 @@ export function createEmployee(data: Record<string, unknown>) {
 export function updateEmployee(id: number, data: Record<string, unknown>) {
   return request.put(`/employees/${id}`, data);
 }
+
+export function previewResignation(id: number, resignDate?: string) {
+  return request.get(`/employees/${id}/resignation/preview`, {
+    params: resignDate ? { resignDate } : {}
+  });
+}
+
+export function resignEmployee(id: number, data: { successorId: number; resignDate: string }) {
+  return request.post(`/employees/${id}/resignation`, data);
+}
