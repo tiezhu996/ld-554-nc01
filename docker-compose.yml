@@ -1,0 +1,62 @@
+name: ldbizstarter
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ${COMPOSE_PROJECT_NAME:-ldbizstarter}-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-bizstarter}
+      MYSQL_USER: ${DB_USER:-bizstarter}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-bizstarter_pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_pass}
+    ports:
+      - "${DB_PORT:-33064}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${DB_USER:-bizstarter} -p${DB_PASSWORD:-bizstarter_pass} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ${COMPOSE_PROJECT_NAME:-ldbizstarter}-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 38504
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-bizstarter}
+      DB_USER: ${DB_USER:-bizstarter}
+      DB_PASSWORD: ${DB_PASSWORD:-bizstarter_pass}
+      JWT_SECRET: ${JWT_SECRET:-change_me_for_production}
+    ports:
+      - "${BACKEND_PORT:-38504}:38504"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:38504/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-ldbizstarter}-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-38404}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

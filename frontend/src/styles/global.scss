@@ -1,0 +1,120 @@
+@use './variables.scss' as *;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  color: $ink;
+  background: $bg;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 224px 1fr;
+}
+
+.app-sidebar {
+  background: #252a24;
+  padding: 18px 10px;
+}
+
+.app-sidebar .el-menu {
+  border: 0;
+  background: transparent;
+}
+
+.app-sidebar .el-menu-item {
+  color: #e8e2d6;
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.app-sidebar .el-menu-item.is-active {
+  color: #fff;
+  background: #0f766e;
+}
+
+.app-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid $line;
+  background: #fbf8f0;
+}
+
+.app-header strong {
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.app-header span {
+  color: $muted;
+}
+
+.content {
+  padding: 28px;
+}
+
+.page-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.page-title h1 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0;
+}
+
+.panel {
+  background: #fbf8f0;
+  border: 1px solid $line;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+.grid.cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid.cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .app-sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 6px;
+  }
+
+  .app-sidebar .el-menu {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .grid.cols-3,
+  .grid.cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
