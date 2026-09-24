@@ -24,6 +24,18 @@ export const ShiftTypeLabel = {
   [ShiftType.REST]: '休息'
 } as const;
 
+export const ShiftStatus = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  CHECKED_IN: 'CHECKED_IN'
+} as const;
+
+export const ShiftStatusLabel = {
+  [ShiftStatus.PENDING]: '待确认',
+  [ShiftStatus.CONFIRMED]: '已确认',
+  [ShiftStatus.CHECKED_IN]: '已打卡'
+} as const;
+
 export const TransactionType = {
   INCOME: 'INCOME',
   EXPENSE: 'EXPENSE'

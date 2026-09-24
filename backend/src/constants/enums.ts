@@ -11,6 +11,12 @@ export const ShiftType = {
   REST: 'REST'
 } as const;
 
+export const ShiftStatus = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  CHECKED_IN: 'CHECKED_IN'
+} as const;
+
 export const TransactionType = {
   INCOME: 'INCOME',
   EXPENSE: 'EXPENSE'
@@ -33,6 +39,7 @@ export const UserRole = {
 
 export type EmployeeStatusValue = (typeof EmployeeStatus)[keyof typeof EmployeeStatus];
 export type ShiftTypeValue = (typeof ShiftType)[keyof typeof ShiftType];
+export type ShiftStatusValue = (typeof ShiftStatus)[keyof typeof ShiftStatus];
 export type TransactionTypeValue = (typeof TransactionType)[keyof typeof TransactionType];
 export type TransactionCategoryValue = (typeof TransactionCategory)[keyof typeof TransactionCategory];
 export type UserRoleValue = (typeof UserRole)[keyof typeof UserRole];

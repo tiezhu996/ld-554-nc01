@@ -23,8 +23,17 @@
           <el-table-column label="状态">
             <template #default="{ row }"><el-tag>{{ EmployeeStatusLabel[row.status as keyof typeof EmployeeStatusLabel] }}</el-tag></template>
           </el-table-column>
-          <el-table-column label="操作">
-            <template #default="{ row }"><el-button text @click="selected = row; detailVisible = true">详情</el-button></template>
+          <el-table-column label="操作" width="150">
+            <template #default="{ row }">
+              <el-button text @click="selected = row; detailVisible = true">详情</el-button>
+              <el-button
+                v-if="row.status !== EmployeeStatus.RESIGNED"
+                v-permission="['OWNER','MANAGER']"
+                text
+                type="warning"
+                @click="selected = row; resignVisible = true"
+              >离职办理</el-button>
+            </template>
           </el-table-column>
         </el-table>
       </div>
@@ -35,6 +44,7 @@
     </div>
     <el-drawer v-model="detailVisible" title="员工详情"><EmployeeDetail :employee="selected" /></el-drawer>
     <el-drawer v-model="formVisible" title="入职登记"><EmployeeForm @submit="save" /></el-drawer>
+    <ResignDialog v-model="resignVisible" :employee="selected" @done="load" />
   </AppLayout>
 </template>
 
@@ -46,7 +56,8 @@ import EmployeeAvatar from '@/components/common/EmployeeAvatar.vue';
 import StoreSelector from '@/components/common/StoreSelector.vue';
 import EmployeeDetail from './EmployeeDetail.vue';
 import EmployeeForm from './EmployeeForm.vue';
-import { EmployeeStatusLabel } from '@/constants/enums';
+import ResignDialog from './ResignDialog.vue';
+import { EmployeeStatus, EmployeeStatusLabel } from '@/constants/enums';
 import { useEmployeeStore } from '@/stores/employeeStore';
 import { createEmployee } from '@/api/employee';
 import type { Employee } from '@/types/employee';
@@ -55,6 +66,7 @@ const employees = useEmployeeStore();
 const filters = reactive<Record<string, unknown>>({});
 const detailVisible = ref(false);
 const formVisible = ref(false);
+const resignVisible = ref(false);
 const selected = ref<Employee | null>(null);
 const departmentTree = computed(() => {
   const groups = employees.list.reduce<Record<string, Employee[]>>((acc, item) => {

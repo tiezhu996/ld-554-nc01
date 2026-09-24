@@ -4,6 +4,8 @@
     <el-descriptions-item label="工号">{{ employee?.employeeNo }}</el-descriptions-item>
     <el-descriptions-item label="部门">{{ employee?.department }}</el-descriptions-item>
     <el-descriptions-item label="职位">{{ employee?.position }}</el-descriptions-item>
+    <el-descriptions-item label="入职日期">{{ employee?.joinDate }}</el-descriptions-item>
+    <el-descriptions-item v-if="employee?.leaveDate" label="离职日期">{{ employee.leaveDate }}</el-descriptions-item>
     <el-descriptions-item label="薪资">{{ money(employee?.salary ?? 0) }}</el-descriptions-item>
   </el-descriptions>
 </template>

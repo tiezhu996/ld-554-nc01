@@ -9,6 +9,7 @@ export interface Employee {
   phone: string;
   email: string;
   joinDate: string;
+  leaveDate: string | null;
   status: keyof typeof EmployeeStatus;
   salary: number;
   role: keyof typeof UserRole;

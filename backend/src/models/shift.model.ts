@@ -1,6 +1,6 @@
 import { DataTypes, Model, type CreationOptional, type InferAttributes, type InferCreationAttributes } from 'sequelize';
 import { sequelize } from '../config/database.js';
-import { ShiftType, type ShiftTypeValue } from '../constants/enums.js';
+import { ShiftType, ShiftStatus, type ShiftTypeValue, type ShiftStatusValue } from '../constants/enums.js';
 
 export class Shift extends Model<InferAttributes<Shift>, InferCreationAttributes<Shift>> {
   declare id: CreationOptional<number>;
@@ -10,7 +10,7 @@ export class Shift extends Model<InferAttributes<Shift>, InferCreationAttributes
   declare startTime: string;
   declare endTime: string;
   declare storeId: number;
-  declare status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN';
+  declare status: ShiftStatusValue;
 }
 
 Shift.init(
@@ -22,7 +22,7 @@ Shift.init(
     startTime: { type: DataTypes.TIME, allowNull: false },
     endTime: { type: DataTypes.TIME, allowNull: false },
     storeId: { type: DataTypes.INTEGER, allowNull: false },
-    status: { type: DataTypes.ENUM('PENDING', 'CONFIRMED', 'CHECKED_IN'), allowNull: false, defaultValue: 'PENDING' }
+    status: { type: DataTypes.ENUM(...Object.values(ShiftStatus)), allowNull: false, defaultValue: ShiftStatus.PENDING }
   },
   { sequelize, tableName: 'shifts' }
 );

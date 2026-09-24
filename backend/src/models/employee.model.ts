@@ -11,6 +11,7 @@ export class Employee extends Model<InferAttributes<Employee>, InferCreationAttr
   declare phone: string;
   declare email: string;
   declare joinDate: string;
+  declare leaveDate: string | null;
   declare status: EmployeeStatusValue;
   declare salary: number;
   declare role: UserRoleValue;
@@ -27,6 +28,7 @@ Employee.init(
     phone: { type: DataTypes.STRING(30), allowNull: false },
     email: { type: DataTypes.STRING(120), allowNull: false },
     joinDate: { type: DataTypes.DATEONLY, allowNull: false },
+    leaveDate: { type: DataTypes.DATEONLY, allowNull: true },
     status: { type: DataTypes.ENUM(...Object.values(EmployeeStatus)), allowNull: false },
     salary: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
     role: { type: DataTypes.ENUM(...Object.values(UserRole)), allowNull: false },

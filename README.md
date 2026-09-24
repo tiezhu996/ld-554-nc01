@@ -5,11 +5,22 @@ BizStarter 面向创业公司与小微企业，覆盖员工管理、排班调度
 ## 功能介绍
 
 - 管理仪表盘：收入支出对比、出勤率、门店营收 TOP、待办事项和快速入口。
-- 员工管理：花名册筛选、组织树、入职登记、详情抽屉、转正/调岗/离职入口基础结构。
+- 员工管理：花名册筛选、组织树、入职登记、详情抽屉、转正/调岗入口、离职办理与工作交接（接手人、班次、门店负责人原子交接）。
 - 排班管理：周视图、自动排班、换班申请流程、月度工时统计。
 - 财务管理：收支记录、记账表单、分类统计、利润报表导出。
 - 门店管理：卡片/表格视图、业绩对比、人员配置、门店详情。
 - 横切能力：JWT 认证、RBAC、按钮权限、数据范围过滤、统一异常处理、操作审计。
+
+## 离职办理与工作交接
+
+员工离职时不能只改员工状态，门店负责人与未来班次必须一并交接：
+
+1. **选择接手人**：办理窗口先拉取与离职者**同店的在职员工**（排除离职者本人与已离职员工）作为候选接手人。
+2. **交接预览**：展示离职日期起「尚未打卡」（状态非 `CHECKED_IN`）的待接班次；已打卡班次保留在离职者名下不转移。若离职者正担任门店店长，会提示需要一并转移门店负责人。
+3. **原子办理**：确认后在单个数据库事务内完成 ① 转移待接班次给接手人、② 将其负责门店的 `managerId` 改为接手人、③ 员工状态置为 `RESIGNED` 并记录 `leaveDate`。任一步失败整体回滚，不会出现状态、班次、门店负责人只改一部分。
+4. **无合格接手人**：同店没有在职接手人时，办理窗口直接提示「请先调岗或换店」，并禁用确认按钮，后端同样拒绝该请求。
+
+相关接口：`POST /api/employees/:id/resign-preview`（预览候选与交接影响）、`POST /api/employees/:id/resign`（提交办理，Owner/Manager 权限，纳入操作审计）。
 
 ## 技术栈
 
@@ -94,6 +105,7 @@ database/   init.sql 和 seed.sql
 |---|---|---|
 | EmployeeStatus | ON_PROBATION / ACTIVE / RESIGNED | `frontend/src/constants/enums.ts`、`frontend/src/pages/employees/EmployeeList.vue`、`frontend/src/pages/employees/EmployeeForm.vue`、`frontend/src/stores/employeeStore.ts`、`backend/src/constants/enums.ts`、`backend/src/models/employee.model.ts`、`backend/src/services/dashboard.service.ts`、`database/init.sql`、`database/seed.sql` |
 | ShiftType | MORNING / AFTERNOON / NIGHT / REST | `frontend/src/constants/enums.ts`、`frontend/src/pages/schedule/ScheduleWeek.vue`、`frontend/src/pages/schedule/ScheduleForm.vue`、`frontend/src/stores/shiftStore.ts`、`backend/src/constants/enums.ts`、`backend/src/models/shift.model.ts`、`backend/src/services/shift.service.ts`、`database/init.sql`、`database/seed.sql` |
+| ShiftStatus | PENDING / CONFIRMED / CHECKED_IN | `frontend/src/constants/enums.ts`、`frontend/src/pages/employees/ResignDialog.vue`、`backend/src/constants/enums.ts`、`backend/src/models/shift.model.ts`、`backend/src/services/offboarding.service.ts`、`database/init.sql`、`database/seed.sql` |
 | TransactionType | INCOME / EXPENSE | `frontend/src/constants/enums.ts`、`frontend/src/pages/finance/FinanceList.vue`、`frontend/src/pages/finance/FinanceForm.vue`、`frontend/src/stores/transactionStore.ts`、`frontend/src/pages/Dashboard.vue`、`backend/src/constants/enums.ts`、`backend/src/models/transaction.model.ts`、`backend/src/services/dashboard.service.ts`、`database/init.sql`、`database/seed.sql` |
 | TransactionCategory | SALARY / PURCHASE / RENT / UTILITY / SALES / OTHER | `frontend/src/constants/enums.ts`、`frontend/src/pages/finance/FinanceList.vue`、`frontend/src/pages/finance/FinanceForm.vue`、`frontend/src/stores/transactionStore.ts`、`backend/src/constants/enums.ts`、`backend/src/models/transaction.model.ts`、`database/init.sql`、`database/seed.sql` |
 | UserRole | OWNER / MANAGER / EMPLOYEE | `frontend/src/constants/enums.ts`、`frontend/src/hooks/usePermission.ts`、`frontend/src/router/guards.ts`、`frontend/src/router/routes/*.ts`、`frontend/src/main.ts`、`backend/src/constants/enums.ts`、`backend/src/constants/permissions.ts`、`backend/src/models/user.model.ts`、`backend/src/models/employee.model.ts`、`backend/src/middlewares/rbac.middleware.ts`、`backend/src/services/scope.service.ts`、`backend/src/routes/*.routes.ts`、`database/init.sql`、`database/seed.sql` |
@@ -104,7 +116,7 @@ database/   init.sql 和 seed.sql
 
 ## 操作日志说明
 
-后端 `audit.middleware.ts` 会审计财务新增/修改/删除、员工新增/修改/删除、排班创建/自动排班/修改、门店新增/修改/删除等关键操作，记录到 `audit_logs` 表，字段包含 `operatorId`、`action`、`target`、`oldValue`、`newValue`、`ip`、`timestamp`。
+后端 `audit.middleware.ts` 会审计财务新增/修改/删除、员工新增/修改/删除、员工离职办理（`RESIGN_EMPLOYEE`，含接手人与交接结果）、排班创建/自动排班/修改、门店新增/修改/删除等关键操作，记录到 `audit_logs` 表，字段包含 `operatorId`、`action`、`target`、`oldValue`、`newValue`、`ip`、`timestamp`。
 
 ## RBAC 权限矩阵
 
